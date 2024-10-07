@@ -18,7 +18,7 @@ import squarify
 import seaborn as sb
 
 # Load the data
-data = pd.read_csv("/Users/rajatthakur/Desktop/SuperDataScienceML/CollaborationProjects/SDS-CP010-tech-companies-analysis/data/tech-companies.csv")
+data = pd.read_csv("data/tech-companies.csv")
 
 # Data Preprocessing
 for i, marketCap in enumerate(data['Market Cap']):
