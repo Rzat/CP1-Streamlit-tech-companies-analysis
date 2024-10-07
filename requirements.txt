@@ -1,9 +1,7 @@
 streamlit
 pandas
-matplotlib.pyplot
+matplotlib
 seaborn
-plotly.express
-plotly.graph_objects
+plotly
 numerize
 squarify
-seaborn
