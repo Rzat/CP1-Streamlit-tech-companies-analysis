@@ -51,45 +51,24 @@ st.write(f"**Median Market Cap:** {medianMarketCap}")
 
 # Top Ten Companies by Market Cap
 st.header("Top Ten Companies by Market Cap")
-topTenCompanies = data[['Company', 'Market Cap']].sort_values(by='Market Cap', ascending=False).head(10)
+topTenCompanies = data[['Company', 'Market Cap', 'Industry']].sort_values(by='Market Cap', ascending=False).head(10)
 formattedTopTenCompanies = topTenCompanies.copy()
 formattedTopTenCompanies['Market Cap'] =formattedTopTenCompanies['Market Cap'].apply(numerize.numerize)
+formattedTopTenCompanies = formattedTopTenCompanies[['Company', 'Market Cap', 'Industry']].reset_index(drop=True)
+formattedTopTenCompanies.index = formattedTopTenCompanies.index+1
 st.dataframe(formattedTopTenCompanies)
 
 # Bar Chart: Top Ten Companies
 st.subheader("Top Ten Companies Market Cap Bar Chart")
 st.markdown("the below bar chart ranks the top ten companies by market capitalization.")
 plt.figure(figsize=(15, 8))
-ax = sns.barplot(x=topTenCompanies['Company'], y=topTenCompanies['Market Cap'], palette='viridis')
+ax = sns.barplot(x=topTenCompanies['Company'] + ' (' + topTenCompanies['Industry'] + ')' , y=topTenCompanies['Market Cap'], palette='viridis')
 numerized_values = [numerize.numerize(val) for val in topTenCompanies['Market Cap']]
 for i, val in enumerate(numerized_values):
     ax.text(i, topTenCompanies['Market Cap'][i], val, ha='center', va='bottom', fontsize=11, color='black')
 
 plt.title('Top Ten Companies according to their market cap', fontsize=16)
 plt.xlabel('Company Name', fontsize=12)
-plt.ylabel('Market Cap (in Trillion)', fontsize=12)
-plt.xticks(rotation=85)
-st.pyplot(plt)
-
-# Top Ten Industry by Market Cap
-st.header("Top Ten Industries by Market Cap")
-topTenIndustries = data.groupby('Industry')['Market Cap'].sum().reset_index()
-topTenIndustries = topTenIndustries.sort_values(by='Market Cap', ascending=False).head(10)
-formattedTopTenIndustries = topTenIndustries.copy()
-formattedTopTenIndustries['Market Cap'] =formattedTopTenIndustries['Market Cap'].apply(numerize.numerize)
-st.dataframe(formattedTopTenIndustries)
-
-# Bar chart Top Ten Industry
-st.subheader("Top Ten Industry Market Cap Bar Chart")
-st.markdown("the below bar chart ranks the top ten industries by market capitalization. The x-axis displays the industry names, while the y-axis represents their market cap in trillions.")
-plt.figure(figsize=(15, 8))
-ax = sns.barplot(x=topTenIndustries['Industry'], y=topTenIndustries['Market Cap'], palette='viridis')
-numerized_values = [numerize.numerize(val) for val in topTenIndustries['Market Cap']]
-for i, val in enumerate(numerized_values):
-    ax.text(i, topTenCompanies['Market Cap'][i], val, ha='center', va='bottom', fontsize=11, color='black')
-
-plt.title('Top Ten Industry according to their market cap', fontsize=16)
-plt.xlabel('Industry Name', fontsize=12)
 plt.ylabel('Market Cap (in Trillion)', fontsize=12)
 plt.xticks(rotation=85)
 st.pyplot(plt)
@@ -108,20 +87,87 @@ fig = px.choropleth(country_grouped, locations='Country', locationmode='country 
 fig.update_layout(title='Market Cap by Country', title_x=0.5)
 st.plotly_chart(fig)
 
-# =============================================================================
-# # Bar Chart: Industries by Country
-# st.header("Industries by Country with Market Cap")
-# country_grouped = data.groupby(['Country', 'Industry'])['Market Cap'].sum().unstack()
-# plt.figure(figsize=(15, 5))
-# country_grouped.plot(kind='bar', stacked=True, figsize=(12, 8), colormap='viridis')
-# plt.title('Industries by Country with Market Cap', fontsize=16)
-# plt.xlabel('Country', fontsize=12)
-# plt.ylabel('Total Market Cap', fontsize=12)
-# plt.xticks(rotation=80)
-# plt.legend(title='Industry', bbox_to_anchor=(1.05, 1), loc='upper left')
-# plt.tight_layout()
-# st.pyplot(plt)
-# =============================================================================
+
+# Show individual country data
+st.header("Individual Country Data")
+st.markdown("Choose a country to view its market capitalization leaderboard, featuring companies ranked by their highest market cap" )
+country_selection = st.selectbox("Select a Country", data['Country'].unique())
+icountry_data= data[data['Country'] == country_selection]
+icountry_data['Market Cap'] = icountry_data['Market Cap'].apply(numerize.numerize)
+icountry_data = icountry_data[['Company', 'Market Cap', 'Industry']].reset_index(drop=True)
+icountry_data.index = icountry_data.index+1
+st.dataframe(icountry_data[['Company', 'Market Cap', 'Industry']])
+
+
+# Top Ten Industry by Market Cap
+st.header("Top Ten Industries by Market Cap")
+topTenIndustries = data.groupby('Industry')['Market Cap'].sum().reset_index()
+topTenIndustries = topTenIndustries.sort_values(by='Market Cap', ascending=False).head(10)
+formattedTopTenIndustries = topTenIndustries.copy()
+formattedTopTenIndustries['Market Cap'] =formattedTopTenIndustries['Market Cap'].apply(numerize.numerize)
+formattedTopTenIndustries = formattedTopTenIndustries[['Industry', 'Market Cap']].reset_index(drop=True)
+formattedTopTenIndustries.index = formattedTopTenIndustries.index+1
+st.dataframe(formattedTopTenIndustries)
+
+# Bar chart Top Ten Industry
+st.subheader("Top Ten Industry Market Cap Bar Chart")
+st.markdown("the below bar chart ranks the top ten industries by market capitalization. The x-axis displays the industry names, while the y-axis represents their market cap in trillions.")
+plt.figure(figsize=(15, 8))
+ax = sns.barplot(x=topTenIndustries['Industry'], y=topTenIndustries['Market Cap'], palette='viridis')
+numerized_values = [numerize.numerize(val) for val in topTenIndustries['Market Cap']]
+for i, val in enumerate(numerized_values):
+    ax.text(i, topTenCompanies['Market Cap'][i], val, ha='center', va='bottom', fontsize=11, color='black')
+
+plt.title('Top Ten Industry according to their market cap', fontsize=16)
+plt.xlabel('Industry Name', fontsize=12)
+plt.ylabel('Market Cap (in Trillion)', fontsize=12)
+plt.xticks(rotation=85)
+st.pyplot(plt)
+
+# Show individual industry data
+st.header("Individual Industry Data")
+st.markdown("Select an industry to view its companies ranked by market capitalization, with their corresponding rankings displayed.")
+industry_selection = st.selectbox("Select an Industry", data['Industry'].unique())
+industry_data = data[data['Industry'] == industry_selection]
+industry_data['Market Cap'] = industry_data['Market Cap'].apply(numerize.numerize)
+industry_data = industry_data[['Company', 'Market Cap']].reset_index(drop=True)
+industry_data.index = industry_data.index+1
+st.dataframe(industry_data[['Company', 'Market Cap']])
+
+
+
+# Define market cap categories
+small_cap = data[data['Market Cap'] < 2e9]
+mid_cap = data[(data['Market Cap'] >= 2e9) & (data['Market Cap'] <= 10e9)]
+large_cap = data[data['Market Cap'] > 10e9]
+
+# Small-Cap Companies
+st.header("Small-Cap Companies")
+st.markdown("Companies with a market capitalization of less than $2 billion, highlighting emerging players.")
+small_cap['Market Cap'] = small_cap['Market Cap'].apply(numerize.numerize)
+small_cap = small_cap[['Company', 'Market Cap', 'Industry']].reset_index(drop= True)
+small_cap.index = small_cap.index+1
+st.dataframe(small_cap[['Company', 'Market Cap', 'Industry']])
+
+
+# Mid-Cap Companies
+st.header("Mid-Cap Companies")
+st.markdown("Companies with a market capitalization between  $2 billion, and   $10 billion, providing growth potential.")
+mid_cap['Market Cap'] = mid_cap['Market Cap'].apply(numerize.numerize)
+mid_cap = mid_cap[['Company', 'Market Cap', 'Industry']].reset_index(drop= True)
+mid_cap.index = mid_cap.index +1
+st.dataframe(mid_cap[['Company', 'Market Cap', 'Industry']])
+
+# Large-Cap Companies
+st.header("Large-Cap Companies")
+st.markdown("Companies with a market capitalization greater than $10 billion, representing industry leaders.")
+large_cap['Market Cap'] = large_cap['Market Cap'].apply(numerize.numerize)
+large_cap = large_cap[['Company', 'Market Cap', 'Industry']]
+large_cap.index = large_cap.index +1
+st.dataframe(large_cap[['Company', 'Market Cap', 'Industry']])
+
+
+
 
 # Market Cap Table
 st.header("Market Cap Table by Industry and Country")
@@ -152,6 +198,8 @@ fig.update_layout(
 )
 st.plotly_chart(fig)
 
+
+
 # Treemap: Companies Distribution by Industries
 st.header("Companies Distribution by Industries")
 st.markdown("The treemap below illustrates the distribution of companies across industries. Larger rectangles represent industries with a greater number of companies, while smaller rectangles indicate industries with fewer companies.")
@@ -180,76 +228,20 @@ squarify.plot(sizes=industry_count['Count'], label=labels,pad = 0.2,
               color=sb.color_palette("rocket"))
 plt.axis('off')
 plt.title('Companies Distribution by industries')
-legend_text = "\n".join([f"{abbr}: {full}" for full,abbr in industry_abbrevations.items()])
-plt.figtext(1,  0.5, legend_text, fontsize=12, bbox={"facecolor":"lightgrey", "alpha":0.5,"pad":5})
-st.pyplot(plt)
 
-# =============================================================================
-# 
-# 
-# st.header("Companies Distribution by Industries with Market Cap")
-# 
-# groupedIndustDF = pd.DataFrame(data)
-# 
-# industry_count = groupedIndustDF.groupby('Industry').agg(
-#                     Company_Count = ('Company','size'),
-#                     Market_Cap = ('Market Cap','sum')).reset_index()
-# 
-# #groupedIndustDF['Industry'].value_counts().reset_index()
-# #industry_count.columns = ['Industry', 'Count']
-# 
-# industry_abbrevations ={
-#     'Software—Application' : 'Software App.',
-#     'Semiconductors' : 'Semiconductors',
-#     'Information Technology Services' : 'IT Services',
-#     'Electronic Components' : 'Elec. Components',
-#     'Software—Infrastructure' : 'Software Infra.',
-#     'Semiconductor Equipment & Materials' : 'Semi. Equ. & Mats',
-#     'Communication Equipment' : 'Comm. Equipment',
-#     'Computer Hardware' : 'Comp. Hardware',
-#     'Scientific & Technical Instruments' : 'Sci. & Tech. In.',
-#     'Consumer Electronics' : 'Cons. Elect.',
-#     'Solar' : 'Solar',
-#     'Electronics & Computer Distribution' :  'Elec. \n & C.D.'
-#     
-# }
-# 
-# 
-# 
-# industry_count['Short Industry'] = industry_count['Industry'].map(industry_abbrevations)
-# industry_count['Formatted Market Cap'] = industry_count['Market_Cap'].apply(numerize.numerize)
-# 
-# 
-# labels = [f"{abbr} ({count})\nMarket Cap: {market_cap}" for abbr, count, market_cap
-#           in zip(industry_count['Short Industry'], industry_count['Company_Count'],
-#                                                                   industry_count['Formatted Market Cap'])]
-# 
-# 
-# fig, ax = plt.subplots(figsize=(12, 8))
-# squarify.plot(sizes=industry_count['Market_Cap'], label=labels,pad = 1.5,  
-#               text_kwargs = {'fontsize': 10, 'color': 'white', 'weight': 'bold'},
-#               color=sb.color_palette("rocket"))
-# 
-# plt.axis('off')
-# plt.title('Companies Distribution by Industry (Market Cap)')
-# 
-# #legend_text = "\n".join([f"{abbr}: {full}" for full,abbr in industry_abbrevations.items()])
-# legend_text = "\n".join(
-#     [
-#         f"{abbr}: {full}, Market Cap: {market_cap}"
-#         for full, abbr, market_cap in zip(
-#             industry_count['Industry'],
-#             industry_count['Short Industry'],
-#             industry_count['Formatted Market Cap']
-#         )
-#     ]
-# )
-# plt.figtext(1,  0.5, legend_text, fontsize=10, bbox={"facecolor":"lightgrey", "alpha":0.5,"pad":5})
-# 
-# st.pyplot(fig)
-# 
-# 
-# =============================================================================
+
+fig = px.treemap(data, path=['Industry', 'Company'], values='Market Cap', color='Market Cap',
+                 color_continuous_scale='Viridis', title="Companies Distribution by Industries")
+fig.update_traces(textinfo='label+value+percent entry')
+st.plotly_chart(fig)
+
+# legend_text = "\n".join([f"{abbr}: {full}" for full,abbr in industry_abbrevations.items()])
+# plt.figtext(1,  0.5, legend_text, fontsize=12, bbox={"facecolor":"lightgrey", "alpha":0.5,"pad":5})
+# st.pyplot(plt)
+
+
+
+
 
 # Bar Chart: Industry Comparison
 st.header("Industry Comparison")
@@ -268,22 +260,8 @@ fig2 = px.bar(
 )
 st.plotly_chart(fig2)
 
-# Show individual industry data
-st.header("Individual Industry Data")
-st.markdown("Select an Industry to view its companies listed in descending order by their market capitalization.")
-industry_selection = st.selectbox("Select an Industry", data['Industry'].unique())
-industry_data = data[data['Industry'] == industry_selection]
-industry_data['Market Cap'] = industry_data['Market Cap'].apply(numerize.numerize)
-st.dataframe(industry_data[['Company', 'Market Cap', 'Industry']])
 
 
-# Show individual country data
-st.header("Individual Country Data")
-st.markdown("Select a Country to explore its companies, including their market capitalization and industry. The market cap column lists companies in descending order by their highest market capitalization, so the company with the largest market cap will be at the top, followed by other relevant details." )
-country_selection = st.selectbox("Select a Country", data['Country'].unique())
-icountry_data= data[data['Country'] == country_selection]
-icountry_data['Market Cap'] = icountry_data['Market Cap'].apply(numerize.numerize)
-st.dataframe(icountry_data[['Company', 'Market Cap', 'Industry']])
 
 
 
