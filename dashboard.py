@@ -141,31 +141,98 @@ small_cap = data[data['Market Cap'] < 2e9]
 mid_cap = data[(data['Market Cap'] >= 2e9) & (data['Market Cap'] <= 10e9)]
 large_cap = data[data['Market Cap'] > 10e9]
 
+
+import plotly.express as px
+
+
 # Small-Cap Companies
-st.header("Small-Cap Companies")
-st.markdown("Companies with a market capitalization of less than $2 billion, highlighting emerging players.")
-small_cap['Market Cap'] = small_cap['Market Cap'].apply(numerize.numerize)
-small_cap = small_cap[['Company', 'Market Cap', 'Industry']].reset_index(drop= True)
-small_cap.index = small_cap.index+1
-st.dataframe(small_cap[['Company', 'Market Cap', 'Industry']])
+st.header("Top Small-Cap Emerging Companies")
+st.markdown("Companies with a market capitalization of less than $2 billion, highlighting emerging players.. Bubble chart representing the top 5 small-cap companies by market capitalization. Hover over a bubble to see detailed information.")
+small_cap['Market Cap'] = pd.to_numeric(small_cap['Market Cap'], errors='coerce')
+top_10_small_cap = small_cap.nlargest(5, 'Market Cap')
+top_10_small_cap['Market Cap (Readable)'] = top_10_small_cap['Market Cap'].apply(numerize.numerize)
+fig = px.scatter(
+    top_10_small_cap,
+    x='Company',  
+    y='Market Cap',
+    size='Market Cap',
+    color='Industry', 
+    hover_name='Company', 
+    hover_data={'Market Cap (Readable)': True, 'Market Cap': False, 
+                'Company': False,'Country': True},
+    size_max=60,  # Adjust bubble size
+    title="Top 5 Small-Cap Companies"
+)
+fig.update_layout(
+    xaxis_title="Company",  
+    yaxis_title="Market Cap",
+    autosize=False, 
+    width=1000,  
+    height=600 
+)
+
+st.plotly_chart(fig)
 
 
 # Mid-Cap Companies
-st.header("Mid-Cap Companies")
-st.markdown("Companies with a market capitalization between  $2 billion, and   $10 billion, providing growth potential.")
-mid_cap['Market Cap'] = mid_cap['Market Cap'].apply(numerize.numerize)
-mid_cap = mid_cap[['Company', 'Market Cap', 'Industry']].reset_index(drop= True)
-mid_cap.index = mid_cap.index +1
-st.dataframe(mid_cap[['Company', 'Market Cap', 'Industry']])
+st.header("Top Mid-Cap Growth Potential Companies")
+st.markdown("Companies with a market capitalization between $2 billion and $10 billion, providing growth potential. Bubble chart representing the top 5 mid-cap companies by market capitalization. Hover over a bubble to see detailed information.")
+mid_cap['Market Cap'] = pd.to_numeric(mid_cap['Market Cap'], errors='coerce')
+top_5_mid_cap = mid_cap.nlargest(5, 'Market Cap')
+top_5_mid_cap['Market Cap (Readable)'] = top_5_mid_cap['Market Cap'].apply(numerize.numerize)
+
+fig = px.scatter(
+    top_5_mid_cap,
+    x='Company',  
+    y='Market Cap',
+    size='Market Cap',
+    color='Industry', 
+    hover_name='Company', 
+    hover_data={'Market Cap (Readable)': True, 
+                'Market Cap': False, 'Company': False,'Country': True},
+    size_max=60,  # Adjust bubble size
+    title="Top 5 Mid-Cap Growth Potential Companies"
+)
+
+fig.update_layout(
+    xaxis_title="Company",  
+    yaxis_title="Market Cap",
+    autosize=False, 
+    width=1000,  
+    height=600 
+)
+st.plotly_chart(fig)
+
 
 # Large-Cap Companies
-st.header("Large-Cap Companies")
+st.header("Large-Cap Industry Leaders")
 st.markdown("Companies with a market capitalization greater than $10 billion, representing industry leaders.")
-large_cap['Market Cap'] = large_cap['Market Cap'].apply(numerize.numerize)
-large_cap = large_cap[['Company', 'Market Cap', 'Industry']]
-large_cap.index = large_cap.index +1
-st.dataframe(large_cap[['Company', 'Market Cap', 'Industry']])
-
+large_cap['Market Cap'] = pd.to_numeric(large_cap['Market Cap'], errors='coerce')
+top_5_large_cap = large_cap.nlargest(5, 'Market Cap')
+top_5_large_cap['Market Cap (Readable)'] = top_5_large_cap['Market Cap'].apply(numerize.numerize)
+fig = px.scatter(
+    top_5_large_cap,
+    x='Company',  
+    y='Market Cap',
+    size='Market Cap',
+    color='Industry', 
+    hover_name='Company', 
+    hover_data={
+        'Market Cap': False,           
+        'Market Cap (Readable)': True, 
+        'Industry': True, 'Country': True            
+    },
+    size_max=60,
+    title="Top 5 Large-Cap Companies"
+)
+fig.update_layout(
+    xaxis_title="Company",  
+    yaxis_title="Market Cap",
+    autosize=False, 
+    width=1000,  
+    height=600 
+)
+st.plotly_chart(fig)
 
 
 
