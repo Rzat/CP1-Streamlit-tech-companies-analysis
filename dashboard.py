@@ -14,8 +14,6 @@ import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 from numerize import numerize
-import squarify
-import seaborn as sb
 
 # Load the data
 data = pd.read_csv("data/tech-companies.csv")
@@ -80,7 +78,9 @@ st.pyplot(plt)
 st.header("Market Cap by Country")
 st.markdown("The interactive map visually represents market capitalization by country, using color-coding to highlight variations. Hovering over a country reveals its name and specific market cap value, enabling easy comparison and analysis of regional economic data.")
 country_grouped = data.groupby('Country')['Market Cap'].sum().reset_index()
+
 country_grouped['Market Cap'] = country_grouped['Market Cap'].apply(numerize.numerize)
+
 fig = px.choropleth(country_grouped, locations='Country', locationmode='country names',
                     color='Market Cap', hover_name='Country',
                     color_continuous_scale=px.colors.sequential.Viridis)
@@ -182,6 +182,7 @@ st.dataframe(pivot_table)
 st.header("Market Cap per Industry")
 st.markdown("The pie chart below illustrates the market capitalization distribution among industries as a percentage. Hovering over each segment of the pie chart will display the industry name, its market capitalization, and its corresponding percentage of the total market capitalization.")
 industry_market_cap = data.groupby('Industry')['Market Cap'].sum().reset_index()
+industry_market_cap['Market Cap Readable'] = industry_market_cap['Market Cap'].apply(numerize.numerize)
 fig = go.Figure(
     data=[go.Pie(
         labels=industry_market_cap['Industry'],
@@ -191,6 +192,11 @@ fig = go.Figure(
         textfont_size=14,
         hole=0.4
     )]
+)
+
+fig.update_traces(
+    hovertemplate='<b>%{label}</b><br>Market Cap: %{customdata}<br>Percentage: %{percent}',
+    customdata=industry_market_cap['Market Cap Readable'], name=""
 )
 fig.update_layout(
     title_text='Market Cap per Industry',
@@ -202,42 +208,32 @@ st.plotly_chart(fig)
 
 # Treemap: Companies Distribution by Industries
 st.header("Companies Distribution by Industries")
-st.markdown("The treemap below illustrates the distribution of companies across industries. Larger rectangles represent industries with a greater number of companies, while smaller rectangles indicate industries with fewer companies.")
+st.markdown("The treemap below illustrates the distribution of top 5 companies across industries. Larger rectangles represent industries with a greater number of companies, while smaller rectangles indicate industries with fewer companies.")
 groupedIndustDF = pd.DataFrame(data)
-industry_count = groupedIndustDF['Industry'].value_counts().reset_index()
-industry_count.columns = ['Industry', 'Count']
-industry_abbrevations ={
-    'Software—Application' : 'Software App.',
-    'Semiconductors' : 'Semiconductors',
-    'Information Technology Services' : 'IT Services',
-    'Electronic Components' : 'Elec. Components',
-    'Software—Infrastructure' : 'Software Infra.',
-    'Semiconductor Equipment & Materials' : 'Semi. Equ. & Mats',
-    'Communication Equipment' : 'Comm. Equipment',
-    'Computer Hardware' : 'Comp. Hardware',
-    'Scientific & Technical Instruments' : 'Sci. & Tech. In.',
-    'Consumer Electronics' : 'Cons. Elect.',
-    'Solar' : 'Solar',
-    'Electronics & Computer Distribution' :  'Elec. \n & C.D.'
-}
-industry_count['Short Industry'] = industry_count['Industry'].map(industry_abbrevations)
-labels = [f"{abbr}\n({count})" for abbr, count in zip(industry_count['Short Industry'], industry_count['Count'])]
-plt.figure(figsize=(10,9))
-squarify.plot(sizes=industry_count['Count'], label=labels,pad = 0.2,
-              text_kwargs = {'fontsize': 10, 'color': 'white'},
-              color=sb.color_palette("rocket"))
-plt.axis('off')
-plt.title('Companies Distribution by industries')
+groupedIndustDF['Market Cap'] = pd.to_numeric(groupedIndustDF['Market Cap'], errors='coerce')
 
+top_3_companies_per_industry = groupedIndustDF.groupby('Industry').apply(
+    lambda x: x.nlargest(3, 'Market Cap')
+).reset_index(drop=True)
 
-fig = px.treemap(data, path=['Industry', 'Company'], values='Market Cap', color='Market Cap',
-                 color_continuous_scale='Viridis', title="Companies Distribution by Industries")
-fig.update_traces(textinfo='label+value+percent entry')
+top_3_companies_per_industry['Market Cap (Readable)'] = top_3_companies_per_industry['Market Cap'].apply(numerize.numerize)
+
+fig = px.treemap(
+    top_3_companies_per_industry, 
+    path=['Industry', 'Company'], 
+    values='Market Cap', 
+    color='Market Cap',
+    color_continuous_scale='Viridis', 
+    title="Top 3 Companies Distribution by Industries",
+    hover_data={'Market Cap': True, 'Market Cap (Readable)': True}
+)
+
+fig.update_traces(textinfo='label+text+value', 
+                  texttemplate='<b>%{label}</b><br>Market Cap: %{customdata[1]}',
+                  hovertemplate='<b>%{label}</b><br>Market Cap: %{customdata[1]}')
+
 st.plotly_chart(fig)
 
-# legend_text = "\n".join([f"{abbr}: {full}" for full,abbr in industry_abbrevations.items()])
-# plt.figtext(1,  0.5, legend_text, fontsize=12, bbox={"facecolor":"lightgrey", "alpha":0.5,"pad":5})
-# st.pyplot(plt)
 
 
 
@@ -259,13 +255,6 @@ fig2 = px.bar(
     hover_data=['Company_Count']
 )
 st.plotly_chart(fig2)
-
-
-
-
-
-
-
 
 
 
